@@ -179,7 +179,7 @@ function genResultGrid() {
     </div>
   </Transition>
   <header>
-    <h1>VVORDLE</h1>
+    <h1>KATLA</h1>
     <a
       id="source-link"
       href="https://github.com/yyx990803/vue-wordle"
@@ -190,6 +190,7 @@ function genResultGrid() {
   <div id="board">
     <div
       v-for="(row, index) in board"
+      :key="index"
       :class="[
         'row',
         shakeRowIndex === index && 'shake',
@@ -198,6 +199,7 @@ function genResultGrid() {
     >
       <div
         v-for="(tile, index) in row"
+        :key="index"
         :class="['tile', tile.letter && 'filled', tile.state && 'revealed']"
       >
         <div class="front" :style="{ transitionDelay: `${index * 300}ms` }">
