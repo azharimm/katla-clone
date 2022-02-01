@@ -21,6 +21,7 @@ const currentRow = $computed(() => board[currentRowIndex])
 
 // Feedback state: message and shake
 let message = $ref('')
+let isGameOver = $ref(false)
 let grid = $ref('')
 let shakeRowIndex = $ref(-1)
 let success = $ref(false)
@@ -149,7 +150,7 @@ function completeRow() {
     } else {
       // game over :(
       setTimeout(() => {
-        showMessage(answer.toUpperCase(), -1)
+        showMessage(answer.toUpperCase(), -1, true)
       }, 1600)
     }
   } else {
@@ -158,8 +159,9 @@ function completeRow() {
   }
 }
 
-function showMessage(msg: string, time = 1000) {
+function showMessage(msg: string, time = 1000, isOver = false) {
   message = msg
+  isGameOver = isOver
   if (time > 0) {
     setTimeout(() => {
       message = ''
@@ -199,6 +201,7 @@ function saveToLocalStorage(data: string) {
   <Transition>
     <div class="message" v-if="message">
       {{ message }}
+      <span v-if="isGameOver">: [<a :href="`http://kbbi.kamus.pelajar.id/arti-kata/${message.toLowerCase()}`" style="color: white;" target="_blank">Arti kata</a>]</span>
       <pre v-if="grid">{{ grid }}</pre>
     </div>
   </Transition>
