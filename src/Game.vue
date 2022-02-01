@@ -7,18 +7,16 @@ import { LetterState } from './types'
 // Get word of the day
 const answer = getWordOfTheDay()
 
+const { boardData, index} = getLocalData()
+
+console.log(boardData);
+
+
 // Board state. Each tile is represented as { letter, state }
-const board = $ref(
-  Array.from({ length: 6 }, () =>
-    Array.from({ length: 5 }, () => ({
-      letter: '',
-      state: LetterState.INITIAL
-    }))
-  )
-)
+const board = $ref(boardData)
 
 // Current active row.
-let currentRowIndex = $ref(0)
+let currentRowIndex = $ref(index)
 const currentRow = $computed(() => board[currentRowIndex])
 
 // Feedback state: message and shake
@@ -41,6 +39,26 @@ onUnmounted(() => {
   window.removeEventListener('keyup', onKeyup)
 })
 
+function getLocalData() {
+  const data = localStorage.getItem('katla-clone');
+  let boardData;
+  let index = 0;
+  if(!data) {
+    boardData = Array.from({ length: 6 }, () =>
+      Array.from({ length: 5 }, () => ({
+        letter: '',
+        state: LetterState.INITIAL
+      }))
+    )
+  } else {
+    const parse = JSON.parse(data);
+    boardData = parse['board'];
+    index = parse['currentRowIndex']
+  }
+
+  return {boardData, index}
+}
+
 function onKey(key: string) {
   if (!allowInput) return
   if (/^[a-zA-Z]$/.test(key)) {
@@ -50,6 +68,8 @@ function onKey(key: string) {
   } else if (key === 'Enter') {
     completeRow()
   }
+  const dataToSave = JSON.stringify({board, currentRowIndex});
+  saveToLocalStorage(dataToSave)
 }
 
 function fillTile(letter: string) {
@@ -134,7 +154,7 @@ function completeRow() {
     }
   } else {
     shake()
-    showMessage('Not enough letters')
+    showMessage('Kata kurang lengkap!')
   }
 }
 
@@ -169,6 +189,10 @@ function genResultGrid() {
     })
     .join('\n')
 }
+
+function saveToLocalStorage(data: string) {
+  localStorage.setItem('katla-clone', data);
+}
 </script>
 
 <template>
@@ -179,13 +203,7 @@ function genResultGrid() {
     </div>
   </Transition>
   <header>
-    <h1>KATLA</h1>
-    <a
-      id="source-link"
-      href="https://github.com/yyx990803/vue-wordle"
-      target="_blank"
-      >Source</a
-    >
+    <h1>KATLA Clone</h1>
   </header>
   <div id="board">
     <div
