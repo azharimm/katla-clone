@@ -217,16 +217,20 @@ function genResultGrid() {
 </template>
 
 <style scoped>
+
+header {
+  margin-top: 50px;
+}
 #board {
   display: grid;
   grid-template-rows: repeat(6, 1fr);
   grid-gap: 5px;
   padding: 10px;
   box-sizing: border-box;
-  --height: min(420px, calc(var(--vh, 100vh) - 310px));
+  --height: min(600px, calc(var(--vh, 100vh) - 310px));
   height: var(--height);
-  width: min(350px, calc(var(--height) / 6 * 5));
-  margin: 0px auto;
+  width: min(600px, calc(var(--height) / 6 * 5));
+  margin: 50px auto;
 }
 .message {
   position: absolute;
