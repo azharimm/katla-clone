@@ -230,7 +230,7 @@ header {
   --height: min(600px, calc(var(--vh, 100vh) - 310px));
   height: var(--height);
   width: min(600px, calc(var(--height) / 6 * 5));
-  margin: 50px auto;
+  margin: 0 auto;
 }
 .message {
   position: absolute;
