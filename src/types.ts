@@ -4,3 +4,9 @@ export const enum LetterState {
   PRESENT = 'present',
   ABSENT = 'absent'
 }
+
+export type BoardRow = {
+  letter: string, state: LetterState
+}
+
+export type BoardGame = Array<BoardRow>

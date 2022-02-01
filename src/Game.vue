@@ -2,18 +2,16 @@
 import { onUnmounted } from 'vue'
 import { getWordOfTheDay, allWords } from './words'
 import Keyboard from './Keyboard.vue'
-import { LetterState } from './types'
+import { LetterState, BoardGame } from './types'
+import { getLocalData, saveToLocalStorage } from './storage'
 
 // Get word of the day
 const answer = getWordOfTheDay()
 
 const { boardData, index} = getLocalData()
 
-console.log(boardData);
-
-
 // Board state. Each tile is represented as { letter, state }
-const board = $ref(boardData)
+const board: Array<BoardGame> = $ref(boardData)
 
 // Current active row.
 let currentRowIndex = $ref(index)
@@ -39,26 +37,6 @@ window.addEventListener('keyup', onKeyup)
 onUnmounted(() => {
   window.removeEventListener('keyup', onKeyup)
 })
-
-function getLocalData() {
-  const data = localStorage.getItem('katla-clone');
-  let boardData;
-  let index = 0;
-  if(!data) {
-    boardData = Array.from({ length: 6 }, () =>
-      Array.from({ length: 5 }, () => ({
-        letter: '',
-        state: LetterState.INITIAL
-      }))
-    )
-  } else {
-    const parse = JSON.parse(data);
-    boardData = parse['board'];
-    index = parse['currentRowIndex']
-  }
-
-  return {boardData, index}
-}
 
 function onKey(key: string) {
   if (!allowInput) return
@@ -192,9 +170,6 @@ function genResultGrid() {
     .join('\n')
 }
 
-function saveToLocalStorage(data: string) {
-  localStorage.setItem('katla-clone', data);
-}
 </script>
 
 <template>
