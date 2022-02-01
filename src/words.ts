@@ -1,4 +1,18 @@
+import { saveToLocalStorage, getLocalDayData, initData } from './storage'
+
 const defaultMessage = ' Using word of the day instead.'
+
+export function getDay(): number {
+  const now = new Date()
+  const start = new Date(2022, 0, 0)
+  const diff = Number(now) - Number(start)
+  let day = Math.floor(diff / (1000 * 60 * 60 * 24))
+  return day
+}
+
+function randomIntFromInterval(min: number, max: number) {
+	return Math.floor(Math.random() * (max - min + 1) + min)
+}
 
 export function getWordOfTheDay() {
   if (location.search) {
@@ -14,17 +28,24 @@ export function getWordOfTheDay() {
     }
   }
 
-  const now = new Date()
-  const start = new Date(2022, 0, 0)
-  const diff = Number(now) - Number(start)
-  let day = Math.floor(diff / (1000 * 60 * 60 * 24))
+  let day = getDay()
   while (day > answers.length) {
     day -= answers.length
   }
-  return answers[day]
+
+  const localDayData = getLocalDayData();
+  let randomKey = 0;
+  if(!localDayData || day > localDayData.day) {
+    randomKey = randomIntFromInterval(0, 6279)
+    saveToLocalStorage('katla-day', JSON.stringify({day, randomKey}))
+    saveToLocalStorage('katla-clone', JSON.stringify({board: initData, currentRowIndex: 0}))
+  } else {
+    randomKey = localDayData.randomKey;
+  }
+  console.log(answers[randomKey]);
+  return answers[randomKey]
 }
 
-// copied from Wordle source
 const answers = [
 'abadi',
 'abaka',

@@ -1,20 +1,22 @@
-import { LetterState, BoardGame, BoardRow } from './types'
+import { LetterState, BoardGame, localStorageKey } from './types'
 
-export function saveToLocalStorage(data: string) {
-    localStorage.setItem('katla-clone', data);
+export const initData = Array.from({ length: 6 }, () =>
+	Array.from({ length: 5 }, () => ({
+	letter: '',
+	state: LetterState.INITIAL
+	}))
+)
+
+export function saveToLocalStorage(key: localStorageKey, data: string) {
+    localStorage.setItem(key, data);
 }
 
-export function getLocalData() {
+export function getLocalBoardData() {
     const data = localStorage.getItem('katla-clone');
     let boardData: Array<BoardGame>;
     let index = 0;
     if(!data) {
-      boardData = Array.from({ length: 6 }, () =>
-        Array.from({ length: 5 }, () => ({
-          letter: '',
-          state: LetterState.INITIAL
-        }))
-      )
+      boardData = initData;
     } else {
       const parse = JSON.parse(data);
       boardData = parse['board'];
@@ -22,4 +24,10 @@ export function getLocalData() {
     }
   
     return {boardData, index}
+}
+
+export function getLocalDayData() {
+	const data = localStorage.getItem('katla-day');
+	if(!data) return data;
+	return JSON.parse(data);
 }

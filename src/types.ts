@@ -5,6 +5,8 @@ export const enum LetterState {
   ABSENT = 'absent'
 }
 
+export type localStorageKey = 'katla-clone' | 'katla-day'
+
 export type BoardRow = {
   letter: string, state: LetterState
 }

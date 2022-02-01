@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { onUnmounted } from 'vue'
-import { getWordOfTheDay, allWords } from './words'
+import { getWordOfTheDay, allWords, getDay } from './words'
 import Keyboard from './Keyboard.vue'
 import { LetterState, BoardGame } from './types'
-import { getLocalData, saveToLocalStorage } from './storage'
+import { getLocalBoardData, saveToLocalStorage } from './storage'
 
 // Get word of the day
 const answer = getWordOfTheDay()
 
-const { boardData, index} = getLocalData()
+const { boardData, index} = getLocalBoardData()
 
 // Board state. Each tile is represented as { letter, state }
 const board: Array<BoardGame> = $ref(boardData)
@@ -48,7 +48,7 @@ function onKey(key: string) {
     completeRow()
   }
   const dataToSave = JSON.stringify({board, currentRowIndex});
-  saveToLocalStorage(dataToSave)
+  saveToLocalStorage('katla-clone', dataToSave)
 }
 
 function fillTile(letter: string) {
@@ -181,7 +181,7 @@ function genResultGrid() {
     </div>
   </Transition>
   <header>
-    <h1>KATLA Clone</h1>
+    <h1>KATLA Clone #{{getDay()}}</h1>
   </header>
   <div id="board">
     <div
