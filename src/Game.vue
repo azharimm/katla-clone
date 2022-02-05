@@ -258,6 +258,7 @@ function genResultGrid() {
 </template>
 
 <style scoped>
+
 #board {
     display: grid;
     grid-template-rows: repeat(6, 1fr);
