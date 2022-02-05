@@ -42,7 +42,6 @@ export function getWordOfTheDay() {
   } else {
     randomKey = localDayData.randomKey;
   }
-  console.log(answers[randomKey]);
   return answers[randomKey]
 }
 
