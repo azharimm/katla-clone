@@ -1,376 +1,428 @@
 <script setup lang="ts">
-import { onUnmounted } from 'vue'
-import { getWordOfTheDay, allWords, getDay } from './words'
-import Keyboard from './Keyboard.vue'
-import { LetterState, BoardGame } from './types'
-import { getLocalBoardData, saveToLocalStorage } from './storage'
+import { onUnmounted } from "vue";
+import { getWordOfTheDay, allWords, getDay } from "./words";
+import Keyboard from "./Keyboard.vue";
+import { LetterState, BoardGame } from "./types";
+import { getLocalBoardData, saveToLocalStorage } from "./storage";
 
 // Get word of the day
-const answer = getWordOfTheDay()
+const answer = getWordOfTheDay();
+console.log(answer);
 
-const { boardData, index} = getLocalBoardData()
+const { boardData, index } = getLocalBoardData();
 
 // Board state. Each tile is represented as { letter, state }
-const board: Array<BoardGame> = $ref(boardData)
+const board: Array<BoardGame> = $ref(boardData);
 
 // Current active row.
-let currentRowIndex = $ref(index)
-const currentRow = $computed(() => board[currentRowIndex])
+let currentRowIndex = $ref(index);
+const currentRow = $computed(() => board[currentRowIndex]);
 
 // Feedback state: message and shake
-let message = $ref('')
-let isGameOver = $ref(false)
-let grid = $ref('')
-let shakeRowIndex = $ref(-1)
-let success = $ref(false)
+let message = $ref("");
+let isGameOver = $ref(false);
+let grid = $ref("");
+let shareMessage = $ref("");
+let shakeRowIndex = $ref(-1);
+let success = $ref(false);
 
 // Keep track of revealed letters for the virtual keyboard
-const letterStates: Record<string, LetterState> = $ref({})
+const letterStates: Record<string, LetterState> = $ref({});
 
 // Handle keyboard input.
-let allowInput = true
+let allowInput = true;
 
-const onKeyup = (e: KeyboardEvent) => onKey(e.key)
+const onKeyup = (e: KeyboardEvent) => onKey(e.key);
 
-window.addEventListener('keyup', onKeyup)
+window.addEventListener("keyup", onKeyup);
 
 onUnmounted(() => {
-  window.removeEventListener('keyup', onKeyup)
-})
+    window.removeEventListener("keyup", onKeyup);
+});
 
 function onKey(key: string) {
-  if (!allowInput) return
-  if (/^[a-zA-Z]$/.test(key)) {
-    fillTile(key.toLowerCase())
-  } else if (key === 'Backspace') {
-    clearTile()
-  } else if (key === 'Enter') {
-    completeRow()
-  }
-  const dataToSave = JSON.stringify({board, currentRowIndex});
-  saveToLocalStorage('katla-clone', dataToSave)
+    if (!allowInput) return;
+    if (/^[a-zA-Z]$/.test(key)) {
+        fillTile(key.toLowerCase());
+    } else if (key === "Backspace") {
+        clearTile();
+    } else if (key === "Enter") {
+        completeRow();
+    }
+    const dataToSave = JSON.stringify({ board, currentRowIndex });
+    saveToLocalStorage("katla-clone", dataToSave);
 }
 
 function fillTile(letter: string) {
-  for (const tile of currentRow) {
-    if (!tile.letter) {
-      tile.letter = letter
-      break
+    for (const tile of currentRow) {
+        if (!tile.letter) {
+            tile.letter = letter;
+            break;
+        }
     }
-  }
 }
 
 function clearTile() {
-  for (const tile of [...currentRow].reverse()) {
-    if (tile.letter) {
-      tile.letter = ''
-      break
+    for (const tile of [...currentRow].reverse()) {
+        if (tile.letter) {
+            tile.letter = "";
+            break;
+        }
     }
-  }
 }
 
 function completeRow() {
-  if (currentRow.every((tile) => tile.letter)) {
-    const guess = currentRow.map((tile) => tile.letter).join('')
-    if (!allWords.includes(guess) && guess !== answer) {
-      shake()
-      showMessage(`Kata tersebut tidak ada`)
-      return
-    }
-
-    const answerLetters: (string | null)[] = answer.split('')
-    // first pass: mark correct ones
-    currentRow.forEach((tile, i) => {
-      if (answerLetters[i] === tile.letter) {
-        tile.state = letterStates[tile.letter] = LetterState.CORRECT
-        answerLetters[i] = null
-      }
-    })
-    // second pass: mark the present
-    currentRow.forEach((tile) => {
-      if (!tile.state && answerLetters.includes(tile.letter)) {
-        tile.state = LetterState.PRESENT
-        answerLetters[answerLetters.indexOf(tile.letter)] = null
-        if (!letterStates[tile.letter]) {
-          letterStates[tile.letter] = LetterState.PRESENT
+    if (currentRow.every((tile) => tile.letter)) {
+        const guess = currentRow.map((tile) => tile.letter).join("");
+        if (!allWords.includes(guess) && guess !== answer) {
+            shake();
+            showMessage(`Kata tersebut tidak ada`);
+            return;
         }
-      }
-    })
-    // 3rd pass: mark absent
-    currentRow.forEach((tile) => {
-      if (!tile.state) {
-        tile.state = LetterState.ABSENT
-        if (!letterStates[tile.letter]) {
-          letterStates[tile.letter] = LetterState.ABSENT
-        }
-      }
-    })
 
-    allowInput = false
-    if (currentRow.every((tile) => tile.state === LetterState.CORRECT)) {
-      // yay!
-      setTimeout(() => {
-        grid = genResultGrid()
-        showMessage(
-          ['Jenius', 'Luar Biasa', 'Hebat', 'Mantul', 'Yay', 'Fiuh'][
-            currentRowIndex
-          ],
-          -1
-        )
-        success = true
-      }, 1600)
-    } else if (currentRowIndex < board.length - 1) {
-      // go the next row
-      currentRowIndex++
-      setTimeout(() => {
-        allowInput = true
-      }, 1600)
+        const answerLetters: (string | null)[] = answer.split("");
+        // first pass: mark correct ones
+        currentRow.forEach((tile, i) => {
+            if (answerLetters[i] === tile.letter) {
+                tile.state = letterStates[tile.letter] = LetterState.CORRECT;
+                answerLetters[i] = null;
+            }
+        });
+        // second pass: mark the present
+        currentRow.forEach((tile) => {
+            if (!tile.state && answerLetters.includes(tile.letter)) {
+                tile.state = LetterState.PRESENT;
+                answerLetters[answerLetters.indexOf(tile.letter)] = null;
+                if (!letterStates[tile.letter]) {
+                    letterStates[tile.letter] = LetterState.PRESENT;
+                }
+            }
+        });
+        // 3rd pass: mark absent
+        currentRow.forEach((tile) => {
+            if (!tile.state) {
+                tile.state = LetterState.ABSENT;
+                if (!letterStates[tile.letter]) {
+                    letterStates[tile.letter] = LetterState.ABSENT;
+                }
+            }
+        });
+
+        allowInput = false;
+        if (currentRow.every((tile) => tile.state === LetterState.CORRECT)) {
+            // yay!
+            setTimeout(() => {
+                grid = genResultGrid();
+                shareMessage = `KatlaClone ${currentRowIndex + 1} / 6
+
+${grid}
+
+`;
+                showMessage(
+                    ["Jenius", "Luar Biasa", "Hebat", "Mantul", "Yay", "Fiuh"][
+                        currentRowIndex
+                    ],
+                    -1
+                );
+                success = true;
+            }, 1600);
+        } else if (currentRowIndex < board.length - 1) {
+            // go the next row
+            currentRowIndex++;
+            setTimeout(() => {
+                allowInput = true;
+            }, 1600);
+        } else {
+            // game over :(
+            grid = genResultGrid();
+            shareMessage = `KatlaClone ${currentRowIndex + 1} / 6
+
+${grid}
+
+`;
+            setTimeout(() => {
+                showMessage(answer.toUpperCase(), -1, true);
+            }, 1600);
+        }
     } else {
-      // game over :(
-      setTimeout(() => {
-        showMessage(answer.toUpperCase(), -1, true)
-      }, 1600)
+        shake();
+        showMessage("Kata kurang lengkap!");
     }
-  } else {
-    shake()
-    showMessage('Kata kurang lengkap!')
-  }
 }
 
 function showMessage(msg: string, time = 1000, isOver = false) {
-  message = msg
-  isGameOver = isOver
-  if (time > 0) {
-    setTimeout(() => {
-      message = ''
-    }, time)
-  }
+    message = msg;
+    isGameOver = isOver;
+    if (time > 0) {
+        setTimeout(() => {
+            message = "";
+        }, time);
+    }
 }
 
 function shake() {
-  shakeRowIndex = currentRowIndex
-  setTimeout(() => {
-    shakeRowIndex = -1
-  }, 1000)
+    shakeRowIndex = currentRowIndex;
+    setTimeout(() => {
+        shakeRowIndex = -1;
+    }, 1000);
 }
 
 const icons = {
-  [LetterState.CORRECT]: '🟩',
-  [LetterState.PRESENT]: '🟨',
-  [LetterState.ABSENT]: '⬜',
-  [LetterState.INITIAL]: null
-}
+    [LetterState.CORRECT]: "🟩",
+    [LetterState.PRESENT]: "🟨",
+    [LetterState.ABSENT]: "⬜",
+    [LetterState.INITIAL]: null,
+};
 
 function genResultGrid() {
-  return board
-    .slice(0, currentRowIndex + 1)
-    .map((row) => {
-      return row.map((tile) => icons[tile.state]).join('')
-    })
-    .join('\n')
+    return board
+        .slice(0, currentRowIndex + 1)
+        .map((row) => {
+            return row.map((tile) => icons[tile.state]).join("");
+        })
+        .join("\n");
 }
-
 </script>
 
 <template>
-  <Transition>
-    <div class="message" v-if="message">
-      {{ message }}
-      <span v-if="isGameOver">: [<a :href="`http://kbbi.kamus.pelajar.id/arti-kata/${message.toLowerCase()}`" style="color: white;" target="_blank">Arti kata</a>]</span>
-      <pre v-if="grid">{{ grid }}</pre>
-    </div>
-  </Transition>
-  <header>
-    <h1>KATLA Clone #{{getDay()}}</h1>
-  </header>
-  <div id="board">
-    <div
-      v-for="(row, index) in board"
-      :key="index"
-      :class="[
-        'row',
-        shakeRowIndex === index && 'shake',
-        success && currentRowIndex === index && 'jump'
-      ]"
-    >
-      <div
-        v-for="(tile, index) in row"
-        :key="index"
-        :class="['tile', tile.letter && 'filled', tile.state && 'revealed']"
-      >
-        <div class="front" :style="{ transitionDelay: `${index * 300}ms` }">
-          {{ tile.letter }}
+    <Transition>
+        <div class="message" v-if="message">
+            {{ message }}
+            <div v-if="grid">
+                <pre>{{ grid }}</pre>
+                <div>
+                    {{ answer.toUpperCase() }}
+                    <span
+                        >: [<a
+                            :href="`http://kbbi.kamus.pelajar.id/arti-kata/${answer.toLowerCase()}`"
+                            style="color: white"
+                            target="_blank"
+                            >Arti kata</a
+                        >]</span
+                    >
+                </div>
+                <div class="share-button">
+                    <i class="fa fa-twitter"></i>&nbsp;
+                    <a
+                        :href="`http://twitter.com/share?text=${encodeURI(
+                            shareMessage
+                        )}&url=https://katla.azharimm.site`"
+                        class="share-link"
+                        target="_blank"
+                        >Share</a
+                    >
+                </div>
+            </div>
         </div>
+    </Transition>
+    <header>
+        <h1>KATLA Clone #{{ getDay() }}</h1>
+    </header>
+    <div id="board">
         <div
-          :class="['back', tile.state]"
-          :style="{
-            transitionDelay: `${index * 300}ms`,
-            animationDelay: `${index * 100}ms`
-          }"
+            v-for="(row, index) in board"
+            :key="index"
+            :class="[
+                'row',
+                shakeRowIndex === index && 'shake',
+                success && currentRowIndex === index && 'jump',
+            ]"
         >
-          {{ tile.letter }}
+            <div
+                v-for="(tile, index) in row"
+                :key="index"
+                :class="[
+                    'tile',
+                    tile.letter && 'filled',
+                    tile.state && 'revealed',
+                ]"
+            >
+                <div
+                    class="front"
+                    :style="{ transitionDelay: `${index * 300}ms` }"
+                >
+                    {{ tile.letter }}
+                </div>
+                <div
+                    :class="['back', tile.state]"
+                    :style="{
+                        transitionDelay: `${index * 300}ms`,
+                        animationDelay: `${index * 100}ms`,
+                    }"
+                >
+                    {{ tile.letter }}
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-  <Keyboard @key="onKey" :letter-states="letterStates" />
+    <Keyboard @key="onKey" :letter-states="letterStates" />
 </template>
 
 <style scoped>
-
 header {
-  margin-top: 50px;
+    margin-top: 50px;
 }
 #board {
-  display: grid;
-  grid-template-rows: repeat(6, 1fr);
-  grid-gap: 5px;
-  padding: 10px;
-  box-sizing: border-box;
-  --height: min(600px, calc(var(--vh, 100vh) - 310px));
-  height: var(--height);
-  width: min(600px, calc(var(--height) / 6 * 5));
-  margin: 0 auto;
+    display: grid;
+    grid-template-rows: repeat(6, 1fr);
+    grid-gap: 5px;
+    padding: 10px;
+    box-sizing: border-box;
+    --height: min(600px, calc(var(--vh, 100vh) - 310px));
+    height: var(--height);
+    width: min(600px, calc(var(--height) / 6 * 5));
+    margin: 0 auto;
 }
 .message {
-  position: absolute;
-  left: 50%;
-  top: 80px;
-  color: #fff;
-  background-color: rgba(0, 0, 0, 0.85);
-  padding: 16px 20px;
-  z-index: 2;
-  border-radius: 4px;
-  transform: translateX(-50%);
-  transition: opacity 0.3s ease-out;
-  font-weight: 600;
+    position: absolute;
+    left: 50%;
+    top: 80px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 16px 20px;
+    z-index: 2;
+    border-radius: 4px;
+    transform: translateX(-50%);
+    transition: opacity 0.3s ease-out;
+    font-weight: 600;
 }
 .message.v-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 .row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-gap: 5px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 5px;
 }
 .tile {
-  width: 100%;
-  font-size: 2rem;
-  line-height: 2rem;
-  font-weight: bold;
-  vertical-align: middle;
-  text-transform: uppercase;
-  user-select: none;
-  position: relative;
+    width: 100%;
+    font-size: 2rem;
+    line-height: 2rem;
+    font-weight: bold;
+    vertical-align: middle;
+    text-transform: uppercase;
+    user-select: none;
+    position: relative;
 }
 .tile.filled {
-  animation: zoom 0.2s;
+    animation: zoom 0.2s;
 }
 .tile .front,
 .tile .back {
-  box-sizing: border-box;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.6s;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+    box-sizing: border-box;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 .tile .front {
-  border: 2px solid #d3d6da;
+    border: 2px solid #d3d6da;
 }
 .tile.filled .front {
-  border-color: #999;
+    border-color: #999;
 }
 .tile .back {
-  transform: rotateX(180deg);
+    transform: rotateX(180deg);
 }
 .tile.revealed .front {
-  transform: rotateX(180deg);
+    transform: rotateX(180deg);
 }
 .tile.revealed .back {
-  transform: rotateX(0deg);
+    transform: rotateX(0deg);
+}
+.share-button {
+    background: #1d9bf0;
+    border-radius: 20px;
+    margin-top: 20px;
+    padding: 5px;
+}
+.share-link {
+    color: white;
+    text-decoration: none;
+    margin-top: 20px;
 }
 
 @keyframes zoom {
-  0% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+    0% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .shake {
-  animation: shake 0.5s;
+    animation: shake 0.5s;
 }
 
 @keyframes shake {
-  0% {
-    transform: translate(1px);
-  }
-  10% {
-    transform: translate(-2px);
-  }
-  20% {
-    transform: translate(2px);
-  }
-  30% {
-    transform: translate(-2px);
-  }
-  40% {
-    transform: translate(2px);
-  }
-  50% {
-    transform: translate(-2px);
-  }
-  60% {
-    transform: translate(2px);
-  }
-  70% {
-    transform: translate(-2px);
-  }
-  80% {
-    transform: translate(2px);
-  }
-  90% {
-    transform: translate(-2px);
-  }
-  100% {
-    transform: translate(1px);
-  }
+    0% {
+        transform: translate(1px);
+    }
+    10% {
+        transform: translate(-2px);
+    }
+    20% {
+        transform: translate(2px);
+    }
+    30% {
+        transform: translate(-2px);
+    }
+    40% {
+        transform: translate(2px);
+    }
+    50% {
+        transform: translate(-2px);
+    }
+    60% {
+        transform: translate(2px);
+    }
+    70% {
+        transform: translate(-2px);
+    }
+    80% {
+        transform: translate(2px);
+    }
+    90% {
+        transform: translate(-2px);
+    }
+    100% {
+        transform: translate(1px);
+    }
 }
 
 .jump .tile .back {
-  animation: jump 0.5s;
+    animation: jump 0.5s;
 }
 
 @keyframes jump {
-  0% {
-    transform: translateY(0px);
-  }
-  20% {
-    transform: translateY(5px);
-  }
-  60% {
-    transform: translateY(-25px);
-  }
-  90% {
-    transform: translateY(3px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+    0% {
+        transform: translateY(0px);
+    }
+    20% {
+        transform: translateY(5px);
+    }
+    60% {
+        transform: translateY(-25px);
+    }
+    90% {
+        transform: translateY(3px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
 }
 
 @media (max-height: 680px) {
-  .tile {
-    font-size: 3vh;
-  }
+    .tile {
+        font-size: 3vh;
+    }
 }
 </style>
