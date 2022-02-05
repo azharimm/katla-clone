@@ -7,7 +7,6 @@ import { getLocalBoardData, saveToLocalStorage } from "./storage";
 
 // Get word of the day
 const answer = getWordOfTheDay();
-console.log(answer);
 
 const { boardData, index } = getLocalBoardData();
 
